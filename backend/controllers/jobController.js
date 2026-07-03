@@ -46,3 +46,26 @@ exports.getJobById = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// DELETE a job (only the recruiter who posted it)
+exports.deleteJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    // Make sure only the recruiter who posted it can delete it
+    if (job.postedBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this job' });
+    }
+
+    await job.deleteOne();
+
+    res.status(200).json({ message: 'Job deleted successfully' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

@@ -10,4 +10,7 @@ router.post('/', protect, authorize('recruiter', 'admin'), jobController.createJ
 router.get('/', jobController.getJobs);
 router.get('/:id', jobController.getJobById);
 
+// Only the recruiter who posted it can delete it
+router.delete('/:id', protect, authorize('recruiter', 'admin'), jobController.deleteJob);
+
 module.exports = router;

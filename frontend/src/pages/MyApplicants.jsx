@@ -14,12 +14,10 @@ function MyApplicants() {
   useEffect(() => {
     const fetchMyJobsAndApplicants = async () => {
       try {
-        // Get all jobs, then filter to only this recruiter's jobs
         const jobsRes = await API.get('/jobs');
         const myJobs = jobsRes.data.filter((job) => job.postedBy?._id === user.id);
         setJobs(myJobs);
 
-        // For each job, fetch its applicants
         const applicantsData = {};
         for (const job of myJobs) {
           const res = await API.get(`/applications/jobs/${job._id}/applications`, {
@@ -47,7 +45,6 @@ function MyApplicants() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update the applicant's status in the UI without re-fetching everything
       setApplicantsByJob((prev) => ({
         ...prev,
         [jobId]: prev[jobId].map((app) =>
@@ -65,6 +62,22 @@ function MyApplicants() {
     }
   };
 
+  const handleDeleteJob = async (jobId) => {
+    if (!window.confirm('Are you sure you want to delete this job?')) return;
+
+    try {
+      await API.delete(`/jobs/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Remove the job from the UI instantly
+      setJobs((prev) => prev.filter((job) => job._id !== jobId));
+
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not delete job');
+    }
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
@@ -77,7 +90,15 @@ function MyApplicants() {
 
       {jobs.map((job) => (
         <div key={job._id} className="job-card">
-          <h3>{job.title}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0 }}>{job.title}</h3>
+            <button
+              onClick={() => handleDeleteJob(job._id)}
+              style={{ background: 'var(--color-rejected)', fontSize: '13px', padding: '6px 12px' }}
+            >
+              Delete Job
+            </button>
+          </div>
           <p><strong>Company:</strong> {job.company}</p>
 
           <h4>Applicants</h4>
