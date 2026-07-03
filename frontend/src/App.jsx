@@ -5,6 +5,7 @@ import Jobs from './pages/Jobs';
 import PostJob from './pages/PostJob';
 import MyApplicants from './pages/MyApplicants';
 import MyApplications from './pages/MyApplications';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ function App() {
             {user.role === 'candidate' && (
               <Link to="/my-applications">My Applications</Link>
             )}
+            {user.role === 'admin' && (
+              <Link to="/admin">Admin Dashboard</Link>
+            )}
             <span className="navbar-user">Hello, {user.name} ({user.role})</span>
             <button onClick={handleLogout}>Logout</button>
           </>
@@ -50,6 +54,7 @@ function App() {
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/my-applicants" element={<MyApplicants />} />
         <Route path="/my-applications" element={<MyApplications />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </div>
   );
