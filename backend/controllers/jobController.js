@@ -12,7 +12,7 @@ exports.createJob = async (req, res) => {
       location,
       skillsRequired,
       salary,
-      postedBy: req.user.id // comes from the JWT token (set by middleware)
+      postedBy: req.user.id
     });
 
     await newJob.save();
@@ -56,7 +56,6 @@ exports.deleteJob = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
-    // Make sure only the recruiter who posted it can delete it
     if (job.postedBy.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to delete this job' });
     }
@@ -64,6 +63,38 @@ exports.deleteJob = async (req, res) => {
     await job.deleteOne();
 
     res.status(200).json({ message: 'Job deleted successfully' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// UPDATE a job (only the recruiter who posted it)
+exports.updateJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    if (job.postedBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to edit this job' });
+    }
+
+    const { title, description, company, location, skillsRequired, salary, status } = req.body;
+
+    if (title) job.title = title;
+    if (description) job.description = description;
+    if (company) job.company = company;
+    if (location) job.location = location;
+    if (skillsRequired) job.skillsRequired = skillsRequired;
+    if (salary) job.salary = salary;
+    if (status) job.status = status;
+
+    await job.save();
+
+    res.status(200).json({ message: 'Job updated successfully', job });
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

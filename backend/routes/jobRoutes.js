@@ -13,4 +13,7 @@ router.get('/:id', jobController.getJobById);
 // Only the recruiter who posted it can delete it
 router.delete('/:id', protect, authorize('recruiter', 'admin'), jobController.deleteJob);
 
+// Only the recruiter who posted it can edit it
+router.put('/:id', protect, authorize('recruiter', 'admin'), jobController.updateJob);
+
 module.exports = router;
