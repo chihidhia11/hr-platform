@@ -79,6 +79,24 @@ function MyApplicants() {
     }
   };
 
+  const handleToggleStatus = async (jobId, currentStatus) => {
+    const newStatus = currentStatus === 'open' ? 'closed' : 'open';
+    try {
+      await API.put(
+        `/jobs/${jobId}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setJobs((prev) => prev.map((job) =>
+        job._id === jobId ? { ...job, status: newStatus } : job
+      ));
+
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not update job status');
+    }
+  };
+
   const handleEditClick = (job) => {
     setEditingJobId(job._id);
     setEditForm({
@@ -102,7 +120,6 @@ function MyApplicants() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update the job in the UI instantly
       setJobs((prev) => prev.map((job) =>
         job._id === jobId ? { ...job, ...res.data.job } : job
       ));
@@ -164,13 +181,28 @@ function MyApplicants() {
             // ---- VIEW MODE ----
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0 }}>{job.title}</h3>
+                <h3 style={{ margin: 0 }}>
+                  {job.title}{' '}
+                  {job.status === 'closed' && (
+                    <span className="status-pill status-rejected" style={{ fontSize: '11px', marginLeft: '8px' }}>Closed</span>
+                  )}
+                </h3>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => handleEditClick(job)}
                     style={{ fontSize: '13px', padding: '6px 12px' }}
                   >
                     Edit Job
+                  </button>
+                  <button
+                    onClick={() => handleToggleStatus(job._id, job.status)}
+                    style={{
+                      background: job.status === 'open' ? 'var(--color-pending)' : 'var(--color-accepted)',
+                      fontSize: '13px',
+                      padding: '6px 12px'
+                    }}
+                  >
+                    {job.status === 'open' ? 'Close Job' : 'Reopen Job'}
                   </button>
                   <button
                     onClick={() => handleDeleteJob(job._id)}

@@ -74,10 +74,7 @@ function Jobs() {
       {filteredJobs.length === 0 && <p>No jobs found.</p>}
 
       {filteredJobs.map((job) => (
-        <div
-          key={job._id}
-          className="job-card"
-        >
+        <div key={job._id} className="job-card">
           <h3>{job.title}</h3>
           <p><strong>Company:</strong> {job.company}</p>
           <p><strong>Location:</strong> {job.location}</p>
@@ -85,7 +82,13 @@ function Jobs() {
           {job.salary && <p><strong>Salary:</strong> {job.salary} TND</p>}
           <p><strong>Posted by:</strong> {job.postedBy?.name}</p>
 
-          {user && user.role === 'candidate' && (
+          {job.status === 'closed' && (
+            <span className="status-pill status-rejected" style={{ marginBottom: '10px', display: 'inline-block' }}>
+              Closed — no longer accepting applications
+            </span>
+          )}
+
+          {user && user.role === 'candidate' && job.status === 'open' && (
             <div style={{ marginTop: '12px' }}>
               <label htmlFor={`resume-${job._id}`}>Paste your CV text (optional, for AI skill match)</label>
               <textarea
