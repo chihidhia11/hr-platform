@@ -7,6 +7,7 @@ function Jobs() {
   const [error, setError] = useState('');
   const [applyMessage, setApplyMessage] = useState({});
   const [resumeTextByJob, setResumeTextByJob] = useState({});
+  const [search, setSearch] = useState('');
 
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
@@ -47,6 +48,13 @@ function Jobs() {
     }
   };
 
+  const filteredJobs = jobs.filter((job) =>
+    job.title.toLowerCase().includes(search.toLowerCase()) ||
+    job.company.toLowerCase().includes(search.toLowerCase()) ||
+    job.location.toLowerCase().includes(search.toLowerCase()) ||
+    job.skillsRequired.some((skill) => skill.toLowerCase().includes(search.toLowerCase()))
+  );
+
   if (loading) return <p>Loading jobs...</p>;
   if (error) return <p>{error}</p>;
 
@@ -55,9 +63,17 @@ function Jobs() {
       <h2 className="page-title">Available Jobs</h2>
       <div className="page-container">
 
-      {jobs.length === 0 && <p>No jobs available right now.</p>}
+      <input
+        type="text"
+        placeholder="Search by title, company, location or skill..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ width: '100%', marginBottom: '20px' }}
+      />
 
-      {jobs.map((job) => (
+      {filteredJobs.length === 0 && <p>No jobs found.</p>}
+
+      {filteredJobs.map((job) => (
         <div
           key={job._id}
           className="job-card"
