@@ -10,6 +10,7 @@ function Jobs() {
   const [cvFileByJob, setCvFileByJob] = useState({});
   const [search, setSearch] = useState('');
   const [recommendedJobs, setRecommendedJobs] = useState({});
+  const [expandedJobs, setExpandedJobs] = useState({});
 
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
@@ -98,6 +99,10 @@ function Jobs() {
     }
   };
 
+  const toggleDescription = (jobId) => {
+    setExpandedJobs((prev) => ({ ...prev, [jobId]: !prev[jobId] }));
+  };
+
   const filteredJobs = jobs.filter((job) =>
     job.title.toLowerCase().includes(search.toLowerCase()) ||
     job.company.toLowerCase().includes(search.toLowerCase()) ||
@@ -151,10 +156,35 @@ function Jobs() {
             )}
           </div>
 
-          <p><strong>Company:</strong> {job.company}</p>
-          <p><strong>Location:</strong> {job.location}</p>
-          <p><strong>Skills:</strong> {job.skillsRequired.join(', ')}</p>
-          {job.salary && <p><strong>Salary:</strong> {job.salary} TND</p>}
+          <p><strong>Company:</strong> {job.company} &nbsp;·&nbsp; <strong>Location:</strong> {job.location}</p>
+
+          {/* Skills as tags */}
+          <div className="skills-tags">
+            {job.skillsRequired.map((skill) => (
+              <span key={skill} className="skill-tag">{skill}</span>
+            ))}
+          </div>
+
+          {/* Description with toggle */}
+          {job.description && (
+            <div>
+              <p className="description-text">
+                {expandedJobs[job._id]
+                  ? job.description
+                  : job.description.length > 100
+                    ? job.description.slice(0, 100) + '...'
+                    : job.description
+                }
+              </p>
+              {job.description.length > 100 && (
+                <button className="toggle-link" onClick={() => toggleDescription(job._id)}>
+                  {expandedJobs[job._id] ? 'Show less' : 'Read more'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {job.salary && <p style={{ marginTop: '8px' }}><strong>Salary:</strong> {job.salary} TND</p>}
           <p><strong>Posted by:</strong> {job.postedBy?.name}</p>
 
           {job.status === 'closed' && (

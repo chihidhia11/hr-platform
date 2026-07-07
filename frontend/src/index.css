@@ -320,3 +320,43 @@ label {
   font-size: 14px;
   margin: 0;
 }
+/* ===== SKILLS TAGS ===== */
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.skill-tag {
+  background: var(--color-sage);
+  color: var(--color-accent);
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ===== JOB DESCRIPTION TOGGLE ===== */
+.description-text {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+.toggle-link {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  font-family: var(--font-body);
+  text-decoration: underline;
+}
+
+.toggle-link:hover {
+  background: none;
+  color: var(--color-accent-hover);
+}
