@@ -14,4 +14,8 @@ router.put('/:applicationId/status', protect, authorize('recruiter', 'admin'), a
 // Candidate views their own applications
 router.get('/my-applications', protect, authorize('candidate'), applicationController.getMyApplications);
 
+// Interview scheduling
+router.post('/:applicationId/interview', protect, authorize('recruiter', 'admin'), applicationController.scheduleInterview);
+router.put('/:applicationId/interview/respond', protect, authorize('candidate'), applicationController.respondToInterview);
+
 module.exports = router;

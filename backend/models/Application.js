@@ -20,10 +20,26 @@ const applicationSchema = new mongoose.Schema({
     type: String
   },
   resumeText: {
-    type: String // raw CV text, used for AI skill matching
+    type: String
   },
   matchPercentage: {
-    type: Number // calculated when application is created
+    type: Number
+  },
+  interview: {
+    scheduledAt: {
+      type: Date
+    },
+    location: {
+      type: String // can be a URL (Zoom/Meet) or physical address
+    },
+    status: {
+      type: String,
+      enum: ['proposed', 'confirmed', 'cancelled'],
+      default: null
+    },
+    notes: {
+      type: String
+    }
   }
 }, { timestamps: true });
 

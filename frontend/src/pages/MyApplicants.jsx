@@ -9,6 +9,8 @@ function MyApplicants() {
   const [statusMessage, setStatusMessage] = useState({});
   const [editingJobId, setEditingJobId] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [schedulingAppId, setSchedulingAppId] = useState(null);
+  const [interviewForm, setInterviewForm] = useState({ scheduledAt: '', location: '', notes: '' });
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
@@ -66,14 +68,9 @@ function MyApplicants() {
 
   const handleDeleteJob = async (jobId) => {
     if (!window.confirm('Are you sure you want to delete this job?')) return;
-
     try {
-      await API.delete(`/jobs/${jobId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      await API.delete(`/jobs/${jobId}`, { headers: { Authorization: `Bearer ${token}` } });
       setJobs((prev) => prev.filter((job) => job._id !== jobId));
-
     } catch (err) {
       alert(err.response?.data?.message || 'Could not delete job');
     }
@@ -82,16 +79,8 @@ function MyApplicants() {
   const handleToggleStatus = async (jobId, currentStatus) => {
     const newStatus = currentStatus === 'open' ? 'closed' : 'open';
     try {
-      await API.put(
-        `/jobs/${jobId}`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setJobs((prev) => prev.map((job) =>
-        job._id === jobId ? { ...job, status: newStatus } : job
-      ));
-
+      await API.put(`/jobs/${jobId}`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } });
+      setJobs((prev) => prev.map((job) => job._id === jobId ? { ...job, status: newStatus } : job));
     } catch (err) {
       alert(err.response?.data?.message || 'Could not update job status');
     }
@@ -113,21 +102,38 @@ function MyApplicants() {
     try {
       const res = await API.put(
         `/jobs/${jobId}`,
-        {
-          ...editForm,
-          skillsRequired: editForm.skillsRequired.split(',').map((s) => s.trim())
-        },
+        { ...editForm, skillsRequired: editForm.skillsRequired.split(',').map((s) => s.trim()) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setJobs((prev) => prev.map((job) => job._id === jobId ? { ...job, ...res.data.job } : job));
+      setEditingJobId(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not update job');
+    }
+  };
+
+  const handleScheduleInterview = async (applicationId, jobId) => {
+    try {
+      const res = await API.post(
+        `/applications/${applicationId}/interview`,
+        interviewForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setJobs((prev) => prev.map((job) =>
-        job._id === jobId ? { ...job, ...res.data.job } : job
-      ));
+      // Update the application in UI
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: prev[jobId].map((app) =>
+          app._id === applicationId ? { ...app, interview: res.data.application.interview } : app
+        )
+      }));
 
-      setEditingJobId(null);
+      setSchedulingAppId(null);
+      setInterviewForm({ scheduledAt: '', location: '', notes: '' });
+      setStatusMessage((prev) => ({ ...prev, [applicationId]: 'Interview scheduled!' }));
 
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not update job');
+      alert(err.response?.data?.message || 'Could not schedule interview');
     }
   };
 
@@ -188,26 +194,16 @@ function MyApplicants() {
                   )}
                 </h3>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => handleEditClick(job)}
-                    style={{ fontSize: '13px', padding: '6px 12px' }}
-                  >
+                  <button onClick={() => handleEditClick(job)} style={{ fontSize: '13px', padding: '6px 12px' }}>
                     Edit Job
                   </button>
                   <button
                     onClick={() => handleToggleStatus(job._id, job.status)}
-                    style={{
-                      background: job.status === 'open' ? 'var(--color-pending)' : 'var(--color-accepted)',
-                      fontSize: '13px',
-                      padding: '6px 12px'
-                    }}
+                    style={{ background: job.status === 'open' ? 'var(--color-pending)' : 'var(--color-accepted)', fontSize: '13px', padding: '6px 12px' }}
                   >
                     {job.status === 'open' ? 'Close Job' : 'Reopen Job'}
                   </button>
-                  <button
-                    onClick={() => handleDeleteJob(job._id)}
-                    style={{ background: 'var(--color-rejected)', fontSize: '13px', padding: '6px 12px' }}
-                  >
+                  <button onClick={() => handleDeleteJob(job._id)} style={{ background: 'var(--color-rejected)', fontSize: '13px', padding: '6px 12px' }}>
                     Delete Job
                   </button>
                 </div>
@@ -228,15 +224,73 @@ function MyApplicants() {
                           </span>
                         )}
                       </div>
-                      <div>
+
+                      {/* Interview status display */}
+                      {app.interview?.scheduledAt && (
+                        <div style={{ marginBottom: '8px', padding: '8px', background: 'var(--color-bg)', borderRadius: '6px', fontSize: '13px' }}>
+                          <strong>📅 Interview:</strong> {new Date(app.interview.scheduledAt).toLocaleString()} —{' '}
+                          <strong>📍</strong> {app.interview.location}{' '}
+                          <span className={`status-pill status-${app.interview.status === 'confirmed' ? 'accepted' : app.interview.status === 'cancelled' ? 'rejected' : 'pending'}`}>
+                            {app.interview.status}
+                          </span>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button onClick={() => handleStatusUpdate(app._id, job._id, 'accepted')}>
                           Accept
                         </button>
-                        <button onClick={() => handleStatusUpdate(app._id, job._id, 'rejected')} style={{ marginLeft: '8px', background: 'var(--color-rejected)' }}>
+                        <button onClick={() => handleStatusUpdate(app._id, job._id, 'rejected')} style={{ background: 'var(--color-rejected)' }}>
                           Reject
                         </button>
-                        {statusMessage[app._id] && <span style={{ marginLeft: '8px', fontSize: '13px', color: 'var(--color-text-muted)' }}>{statusMessage[app._id]}</span>}
+                        <button
+                          onClick={() => setSchedulingAppId(schedulingAppId === app._id ? null : app._id)}
+                          style={{ background: 'var(--color-pending)' }}
+                        >
+                          📅 Schedule Interview
+                        </button>
+                        {statusMessage[app._id] && <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', alignSelf: 'center' }}>{statusMessage[app._id]}</span>}
                       </div>
+
+                      {/* Interview scheduling form */}
+                      {schedulingAppId === app._id && (
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-bg)', borderRadius: '8px' }}>
+                          <div className="form-field">
+                            <label>Date & Time</label>
+                            <input
+                              type="datetime-local"
+                              value={interviewForm.scheduledAt}
+                              onChange={(e) => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })}
+                            />
+                          </div>
+                          <div className="form-field">
+                            <label>Location (address or meeting link)</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. https://meet.google.com/abc or Office - Floor 3"
+                              value={interviewForm.location}
+                              onChange={(e) => setInterviewForm({ ...interviewForm, location: e.target.value })}
+                            />
+                          </div>
+                          <div className="form-field">
+                            <label>Notes (optional)</label>
+                            <textarea
+                              rows={2}
+                              placeholder="e.g. Please bring your portfolio"
+                              value={interviewForm.notes}
+                              onChange={(e) => setInterviewForm({ ...interviewForm, notes: e.target.value })}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => handleScheduleInterview(app._id, job._id)}>
+                              Send Interview Invitation
+                            </button>
+                            <button onClick={() => setSchedulingAppId(null)} style={{ background: 'var(--color-text-muted)' }}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
