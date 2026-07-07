@@ -79,7 +79,7 @@ exports.getProfile = async (req, res) => {
 // UPDATE current user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, currentPassword, newPassword } = req.body;
+    const { name, email, currentPassword, newPassword, skills } = req.body;
 
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -98,6 +98,11 @@ exports.updateProfile = async (req, res) => {
       user.email = email;
     }
 
+    // Update skills if provided (candidates only)
+    if (skills && Array.isArray(skills)) {
+      user.skills = skills;
+    }
+
     // Update password if provided
     if (currentPassword && newPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
@@ -109,14 +114,14 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
-    // Return updated user without password
     res.status(200).json({
       message: 'Profile updated successfully',
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        skills: user.skills
       }
     });
 

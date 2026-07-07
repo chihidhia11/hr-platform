@@ -9,6 +9,7 @@ function Jobs() {
   const [resumeTextByJob, setResumeTextByJob] = useState({});
   const [cvFileByJob, setCvFileByJob] = useState({});
   const [search, setSearch] = useState('');
+  const [recommendedJobs, setRecommendedJobs] = useState({});
 
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
@@ -18,6 +19,45 @@ function Jobs() {
       try {
         const res = await API.get('/jobs');
         setJobs(res.data);
+
+        // If candidate is logged in, fetch their profile skills and calculate recommendations
+        if (user && user.role === 'candidate' && token) {
+          try {
+            const profileRes = await API.get('/auth/profile', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const candidateSkills = profileRes.data.skills;
+
+            if (candidateSkills && candidateSkills.length > 0) {
+              const recommendations = {};
+
+              for (const job of res.data) {
+                if (job.status === 'open' && job.skillsRequired?.length > 0) {
+                  try {
+                    const matchRes = await API.post(
+                      'http://127.0.0.1:5001/match',
+                      {
+                        cvText: candidateSkills.join(' '),
+                        requiredSkills: job.skillsRequired
+                      }
+                    );
+                    if (matchRes.data.matchPercentage >= 50) {
+                      recommendations[job._id] = matchRes.data.matchPercentage;
+                    }
+                  } catch (e) {
+                    // AI service down, skip recommendations silently
+                  }
+                }
+              }
+
+              setRecommendedJobs(recommendations);
+            }
+          } catch (e) {
+            // Profile fetch failed, skip recommendations
+          }
+        }
+
       } catch (err) {
         setError('Could not load jobs');
       } finally {
@@ -32,11 +72,9 @@ function Jobs() {
     try {
       const formData = new FormData();
 
-      // If a PDF was selected, use it
       if (cvFileByJob[jobId]) {
         formData.append('cv', cvFileByJob[jobId]);
       } else {
-        // Otherwise use text input
         formData.append('resumeText', resumeTextByJob[jobId] || '');
       }
 
@@ -88,7 +126,22 @@ function Jobs() {
 
       {filteredJobs.map((job) => (
         <div key={job._id} className="job-card">
-          <h3>{job.title}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <h3 style={{ margin: 0 }}>{job.title}</h3>
+            {recommendedJobs[job._id] && (
+              <span style={{
+                background: 'rgba(15, 118, 110, 0.12)',
+                color: 'var(--color-accent)',
+                padding: '4px 10px',
+                borderRadius: '100px',
+                fontSize: '12px',
+                fontWeight: 700
+              }}>
+                ⭐ Recommended — {recommendedJobs[job._id]}% match
+              </span>
+            )}
+          </div>
+
           <p><strong>Company:</strong> {job.company}</p>
           <p><strong>Location:</strong> {job.location}</p>
           <p><strong>Skills:</strong> {job.skillsRequired.join(', ')}</p>
@@ -103,8 +156,6 @@ function Jobs() {
 
           {user && user.role === 'candidate' && job.status === 'open' && (
             <div style={{ marginTop: '12px' }}>
-
-              {/* PDF Upload Option */}
               <div className="form-field">
                 <label>Upload CV (PDF) — recommended for AI matching</label>
                 <input
@@ -119,7 +170,6 @@ function Jobs() {
                 )}
               </div>
 
-              {/* Text fallback — only show if no PDF selected */}
               {!cvFileByJob[job._id] && (
                 <div className="form-field">
                   <label>Or paste your CV text (optional)</label>

@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['candidate', 'recruiter', 'admin'],
     default: 'candidate'
+  },
+  skills: {
+    type: [String],
+    default: []
   }
 }, { timestamps: true });
 
