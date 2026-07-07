@@ -23,7 +23,6 @@ function Jobs() {
         setJobs(res.data);
 
         if (user && user.role === 'candidate' && token) {
-          // Fetch existing applications to know which jobs already applied to
           try {
             const applicationsRes = await API.get('/applications/my-applications', {
               headers: { Authorization: `Bearer ${token}` }
@@ -33,11 +32,8 @@ function Jobs() {
               applied[app.job?._id] = true;
             });
             setAppliedJobs(applied);
-          } catch (e) {
-            // Could not fetch applications, skip
-          }
+          } catch (e) {}
 
-          // Fetch profile skills for recommendations
           try {
             const profileRes = await API.get('/auth/profile', {
               headers: { Authorization: `Bearer ${token}` }
@@ -61,17 +57,13 @@ function Jobs() {
                     if (matchRes.data.matchPercentage >= 50) {
                       recommendations[job._id] = matchRes.data.matchPercentage;
                     }
-                  } catch (e) {
-                    // AI service down, skip
-                  }
+                  } catch (e) {}
                 }
               }
 
               setRecommendedJobs(recommendations);
             }
-          } catch (e) {
-            // Profile fetch failed, skip
-          }
+          } catch (e) {}
         }
 
       } catch (err) {
@@ -200,7 +192,13 @@ function Jobs() {
           )}
 
           {job.salary && <p style={{ marginTop: '8px' }}><strong>Salary:</strong> {job.salary} TND</p>}
-          <p><strong>Posted by:</strong> {job.postedBy?.name}</p>
+
+          <p style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span><strong>Posted by:</strong> {job.postedBy?.name}</span>
+            <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+              👥 {job.applicantCount || 0} {job.applicantCount === 1 ? 'applicant' : 'applicants'}
+            </span>
+          </p>
 
           {job.status === 'closed' && (
             <span className="status-pill status-rejected" style={{ marginBottom: '10px', display: 'inline-block' }}>
@@ -210,13 +208,8 @@ function Jobs() {
 
           {user && user.role === 'candidate' && job.status === 'open' && (
             <div style={{ marginTop: '12px' }}>
-
-              {/* Already applied — show disabled button */}
               {appliedJobs[job._id] ? (
-                <button
-                  disabled
-                  style={{ background: 'var(--color-text-muted)', cursor: 'not-allowed', opacity: 0.7 }}
-                >
+                <button disabled style={{ background: 'var(--color-text-muted)', cursor: 'not-allowed', opacity: 0.7 }}>
                   ✅ Already Applied
                 </button>
               ) : (
@@ -251,9 +244,7 @@ function Jobs() {
                     </div>
                   )}
 
-                  <button onClick={() => handleApply(job._id)}>
-                    Apply
-                  </button>
+                  <button onClick={() => handleApply(job._id)}>Apply</button>
                 </>
               )}
             </div>

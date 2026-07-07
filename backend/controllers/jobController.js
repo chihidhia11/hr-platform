@@ -27,8 +27,18 @@ exports.createJob = async (req, res) => {
 // GET all jobs (anyone can see)
 exports.getJobs = async (req, res) => {
   try {
+    const Application = require('../models/Application');
     const jobs = await Job.find().populate('postedBy', 'name email');
-    res.status(200).json(jobs);
+
+    // Add applicant count to each job
+    const jobsWithCount = await Promise.all(
+      jobs.map(async (job) => {
+        const count = await Application.countDocuments({ job: job._id });
+        return { ...job.toObject(), applicantCount: count };
+      })
+    );
+
+    res.status(200).json(jobsWithCount);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
