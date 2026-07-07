@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 function MyApplicants() {
   const [jobs, setJobs] = useState([]);
   const [applicantsByJob, setApplicantsByJob] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [statusMessage, setStatusMessage] = useState({});
   const [editingJobId, setEditingJobId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [schedulingAppId, setSchedulingAppId] = useState(null);
@@ -14,6 +14,7 @@ function MyApplicants() {
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchMyJobsAndApplicants = async () => {
@@ -56,13 +57,13 @@ function MyApplicants() {
         )
       }));
 
-      setStatusMessage((prev) => ({ ...prev, [applicationId]: 'Updated!' }));
+      showToast(
+        newStatus === 'accepted' ? '✅ Candidate accepted!' : '❌ Candidate rejected',
+        newStatus === 'accepted' ? 'success' : 'error'
+      );
 
     } catch (err) {
-      setStatusMessage((prev) => ({
-        ...prev,
-        [applicationId]: err.response?.data?.message || 'Failed to update'
-      }));
+      showToast(err.response?.data?.message || 'Failed to update', 'error');
     }
   };
 
@@ -71,8 +72,9 @@ function MyApplicants() {
     try {
       await API.delete(`/jobs/${jobId}`, { headers: { Authorization: `Bearer ${token}` } });
       setJobs((prev) => prev.filter((job) => job._id !== jobId));
+      showToast('🗑️ Job deleted successfully', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not delete job');
+      showToast(err.response?.data?.message || 'Could not delete job', 'error');
     }
   };
 
@@ -81,8 +83,9 @@ function MyApplicants() {
     try {
       await API.put(`/jobs/${jobId}`, { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } });
       setJobs((prev) => prev.map((job) => job._id === jobId ? { ...job, status: newStatus } : job));
+      showToast(newStatus === 'closed' ? '🔒 Job closed' : '🔓 Job reopened', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not update job status');
+      showToast(err.response?.data?.message || 'Could not update job status', 'error');
     }
   };
 
@@ -107,8 +110,9 @@ function MyApplicants() {
       );
       setJobs((prev) => prev.map((job) => job._id === jobId ? { ...job, ...res.data.job } : job));
       setEditingJobId(null);
+      showToast('✅ Job updated successfully', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not update job');
+      showToast(err.response?.data?.message || 'Could not update job', 'error');
     }
   };
 
@@ -129,10 +133,10 @@ function MyApplicants() {
 
       setSchedulingAppId(null);
       setInterviewForm({ scheduledAt: '', location: '', notes: '' });
-      setStatusMessage((prev) => ({ ...prev, [applicationId]: '✅ Interview scheduled!' }));
+      showToast('📅 Interview scheduled! Email sent to candidate.', 'success');
 
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not schedule interview');
+      showToast(err.response?.data?.message || 'Could not schedule interview', 'error');
     }
   };
 
@@ -201,9 +205,7 @@ function MyApplicants() {
                   )}
                 </h3>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => handleEditClick(job)} style={{ fontSize: '13px', padding: '6px 12px' }}>
-                    Edit Job
-                  </button>
+                  <button onClick={() => handleEditClick(job)} style={{ fontSize: '13px', padding: '6px 12px' }}>Edit Job</button>
                   <button
                     onClick={() => handleToggleStatus(job._id, job.status)}
                     style={{ background: job.status === 'open' ? 'var(--color-pending)' : 'var(--color-accepted)', fontSize: '13px', padding: '6px 12px' }}
@@ -251,7 +253,6 @@ function MyApplicants() {
                         >
                           📅 Schedule Interview
                         </button>
-                        {statusMessage[app._id] && <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', alignSelf: 'center' }}>{statusMessage[app._id]}</span>}
                       </div>
 
                       {schedulingAppId === app._id && (

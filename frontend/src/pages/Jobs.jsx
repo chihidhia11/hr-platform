@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [applyMessage, setApplyMessage] = useState({});
   const [resumeTextByJob, setResumeTextByJob] = useState({});
   const [cvFileByJob, setCvFileByJob] = useState({});
   const [search, setSearch] = useState('');
@@ -15,6 +15,7 @@ function Jobs() {
 
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -97,14 +98,11 @@ function Jobs() {
         }
       );
 
-      setApplyMessage((prev) => ({ ...prev, [jobId]: '✅ Applied successfully!' }));
       setAppliedJobs((prev) => ({ ...prev, [jobId]: true }));
+      showToast('✅ Application submitted successfully!', 'success');
 
     } catch (err) {
-      setApplyMessage((prev) => ({
-        ...prev,
-        [jobId]: err.response?.data?.message || 'Could not apply'
-      }));
+      showToast(err.response?.data?.message || 'Could not apply', 'error');
     }
   };
 
@@ -248,12 +246,6 @@ function Jobs() {
                 </>
               )}
             </div>
-          )}
-
-          {applyMessage[job._id] && (
-            <p style={{ marginTop: '8px', color: applyMessage[job._id].startsWith('✅') ? 'var(--color-accepted)' : 'var(--color-rejected)' }}>
-              {applyMessage[job._id]}
-            </p>
           )}
         </div>
       ))}

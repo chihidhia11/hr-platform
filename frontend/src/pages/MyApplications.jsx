@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 function MyApplications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [interviewMessage, setInterviewMessage] = useState({});
 
   const token = localStorage.getItem('token');
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -38,16 +39,13 @@ function MyApplications() {
         app._id === applicationId ? { ...app, interview: res.data.application.interview } : app
       ));
 
-      setInterviewMessage((prev) => ({
-        ...prev,
-        [applicationId]: status === 'confirmed' ? '✅ Interview confirmed!' : '❌ Interview cancelled'
-      }));
+      showToast(
+        status === 'confirmed' ? '✅ Interview confirmed!' : '❌ Interview cancelled',
+        status === 'confirmed' ? 'success' : 'error'
+      );
 
     } catch (err) {
-      setInterviewMessage((prev) => ({
-        ...prev,
-        [applicationId]: err.response?.data?.message || 'Could not respond to interview'
-      }));
+      showToast(err.response?.data?.message || 'Could not respond to interview', 'error');
     }
   };
 
@@ -86,7 +84,6 @@ function MyApplications() {
             )}
           </p>
 
-          {/* Interview section */}
           {app.interview?.scheduledAt && (
             <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-bg)', borderRadius: '8px', borderLeft: '4px solid var(--color-accent)' }}>
               <p style={{ margin: '0 0 8px', fontWeight: 600 }}>📅 Interview Scheduled</p>
@@ -125,12 +122,6 @@ function MyApplications() {
                     ❌ Cancel Interview
                   </button>
                 </div>
-              )}
-
-              {interviewMessage[app._id] && (
-                <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                  {interviewMessage[app._id]}
-                </p>
               )}
             </div>
           )}
