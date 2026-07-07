@@ -47,7 +47,6 @@ function AdminDashboard() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
-  // Chart data
   const usersChartData = {
     labels: ['Candidates', 'Recruiters'],
     datasets: [{
@@ -77,18 +76,12 @@ function AdminDashboard() {
   };
 
   const chartOptions = {
-    plugins: {
-      legend: { position: 'bottom' }
-    }
+    plugins: { legend: { position: 'bottom' } }
   };
 
   const barOptions = {
-    plugins: {
-      legend: { display: false }
-    },
-    scales: {
-      y: { beginAtZero: true, ticks: { stepSize: 1 } }
-    }
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
   };
 
   return (
@@ -98,7 +91,7 @@ function AdminDashboard() {
 
         {/* Stats Cards */}
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
             <div className="job-card" style={{ textAlign: 'center' }}>
               <h1 style={{ margin: 0, color: 'var(--color-accent)' }}>{stats.totalUsers}</h1>
               <p style={{ margin: 0 }}>Total Users</p>
@@ -122,7 +115,7 @@ function AdminDashboard() {
 
         {/* Charts */}
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+          <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '32px' }}>
             <div className="job-card">
               <h4 style={{ marginTop: 0, textAlign: 'center' }}>Users by Role</h4>
               <Pie data={usersChartData} options={chartOptions} />
@@ -140,42 +133,44 @@ function AdminDashboard() {
 
         {/* Users Table */}
         <h3>All Users</h3>
-        <div className="job-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--color-sage)' }}>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Name</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Email</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Role</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Joined</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user, index) => (
-                <tr key={user._id} style={{ borderTop: '1px solid var(--color-border)', background: index % 2 === 0 ? 'white' : 'var(--color-bg)' }}>
-                  <td style={{ padding: '12px 16px', fontSize: '14px' }}>{user.name}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', color: 'var(--color-text-muted)' }}>{user.email}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span className={`status-pill ${user.role === 'admin' ? 'status-accepted' : user.role === 'recruiter' ? 'status-pending' : 'status-pill'}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <button
-                      onClick={() => handleDeleteUser(user._id)}
-                      style={{ background: 'var(--color-rejected)', fontSize: '12px', padding: '4px 10px' }}
-                    >
-                      Delete
-                    </button>
-                  </td>
+        <div className="table-wrapper">
+          <div className="job-card" style={{ padding: 0, overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--color-sage)' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Name</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Email</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Role</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Joined</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px' }}>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map((user, index) => (
+                  <tr key={user._id} style={{ borderTop: '1px solid var(--color-border)', background: index % 2 === 0 ? 'white' : 'var(--color-bg)' }}>
+                    <td style={{ padding: '12px 16px', fontSize: '14px' }}>{user.name}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '14px', color: 'var(--color-text-muted)' }}>{user.email}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span className={`status-pill ${user.role === 'admin' ? 'status-accepted' : user.role === 'recruiter' ? 'status-pending' : 'status-pill'}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <button
+                        onClick={() => handleDeleteUser(user._id)}
+                        style={{ background: 'var(--color-rejected)', fontSize: '12px', padding: '4px 10px' }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
