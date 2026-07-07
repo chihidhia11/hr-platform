@@ -76,7 +76,7 @@ exports.applyToJob = async (req, res) => {
   }
 };
 
-// RECRUITER views applications for a specific job
+// RECRUITER views applications for a specific job (sorted by match %)
 exports.getApplicationsForJob = async (req, res) => {
   try {
     const { jobId } = req.params;
@@ -84,7 +84,15 @@ exports.getApplicationsForJob = async (req, res) => {
     const applications = await Application.find({ job: jobId })
       .populate('candidate', 'name email');
 
-    res.status(200).json(applications);
+    // Sort by match percentage (highest first, null values at the end)
+    const sorted = applications.sort((a, b) => {
+      if (a.matchPercentage === null && b.matchPercentage === null) return 0;
+      if (a.matchPercentage === null) return 1;
+      if (b.matchPercentage === null) return -1;
+      return b.matchPercentage - a.matchPercentage;
+    });
+
+    res.status(200).json(sorted);
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
