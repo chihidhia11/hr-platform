@@ -3,6 +3,7 @@ const Job = require('../models/Job');
 const axios = require('axios');
 const fs = require('fs');
 const FormData = require('form-data');
+const { sendApplicationStatusEmail } = require('../emailService');
 
 // CANDIDATE applies to a job
 exports.applyToJob = async (req, res) => {
@@ -113,13 +114,32 @@ exports.updateApplicationStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    const application = await Application.findById(applicationId);
+    const application = await Application.findById(applicationId)
+      .populate('candidate', 'name email')
+      .populate('job', 'title company');
+
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
     application.status = status;
     await application.save();
+
+    // Send email notification to candidate
+    if (status === 'accepted' || status === 'rejected') {
+      try {
+        await sendApplicationStatusEmail(
+          application.candidate.email,
+          application.candidate.name,
+          application.job.title,
+          application.job.company,
+          status
+        );
+        console.log(`✅ Email sent to ${application.candidate.email}`);
+      } catch (emailError) {
+        console.log('Email sending failed (continuing):', emailError.message);
+      }
+    }
 
     res.status(200).json({ message: 'Application updated', application });
 
