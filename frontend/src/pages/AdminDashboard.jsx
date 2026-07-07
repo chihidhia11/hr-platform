@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -43,6 +47,50 @@ function AdminDashboard() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
+  // Chart data
+  const usersChartData = {
+    labels: ['Candidates', 'Recruiters'],
+    datasets: [{
+      data: [stats?.totalCandidates || 0, stats?.totalRecruiters || 0],
+      backgroundColor: ['#0F766E', '#D97706'],
+      borderWidth: 0
+    }]
+  };
+
+  const jobsChartData = {
+    labels: ['Open Jobs', 'Closed Jobs'],
+    datasets: [{
+      data: [stats?.openJobs || 0, stats?.closedJobs || 0],
+      backgroundColor: ['#0F766E', '#B91C1C'],
+      borderWidth: 0
+    }]
+  };
+
+  const overviewChartData = {
+    labels: ['Users', 'Jobs', 'Applications'],
+    datasets: [{
+      label: 'Total Count',
+      data: [stats?.totalUsers || 0, stats?.totalJobs || 0, stats?.totalApplications || 0],
+      backgroundColor: ['#0F766E', '#D97706', '#1A2332'],
+      borderRadius: 6
+    }]
+  };
+
+  const chartOptions = {
+    plugins: {
+      legend: { position: 'bottom' }
+    }
+  };
+
+  const barOptions = {
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  };
+
   return (
     <div>
       <h2 className="page-title">Admin Dashboard</h2>
@@ -68,6 +116,24 @@ function AdminDashboard() {
             <div className="job-card" style={{ textAlign: 'center' }}>
               <h1 style={{ margin: 0, color: 'var(--color-accent)' }}>{stats.totalApplications}</h1>
               <p style={{ margin: 0 }}>Total Applications</p>
+            </div>
+          </div>
+        )}
+
+        {/* Charts */}
+        {stats && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+            <div className="job-card">
+              <h4 style={{ marginTop: 0, textAlign: 'center' }}>Users by Role</h4>
+              <Pie data={usersChartData} options={chartOptions} />
+            </div>
+            <div className="job-card">
+              <h4 style={{ marginTop: 0, textAlign: 'center' }}>Jobs by Status</h4>
+              <Pie data={jobsChartData} options={chartOptions} />
+            </div>
+            <div className="job-card">
+              <h4 style={{ marginTop: 0, textAlign: 'center' }}>Platform Overview</h4>
+              <Bar data={overviewChartData} options={barOptions} />
             </div>
           </div>
         )}
