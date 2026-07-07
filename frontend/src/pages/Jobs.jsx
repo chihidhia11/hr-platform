@@ -11,6 +11,7 @@ function Jobs() {
   const [search, setSearch] = useState('');
   const [recommendedJobs, setRecommendedJobs] = useState({});
   const [expandedJobs, setExpandedJobs] = useState({});
+  const [appliedJobs, setAppliedJobs] = useState({});
 
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
@@ -22,6 +23,21 @@ function Jobs() {
         setJobs(res.data);
 
         if (user && user.role === 'candidate' && token) {
+          // Fetch existing applications to know which jobs already applied to
+          try {
+            const applicationsRes = await API.get('/applications/my-applications', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const applied = {};
+            applicationsRes.data.forEach((app) => {
+              applied[app.job?._id] = true;
+            });
+            setAppliedJobs(applied);
+          } catch (e) {
+            // Could not fetch applications, skip
+          }
+
+          // Fetch profile skills for recommendations
           try {
             const profileRes = await API.get('/auth/profile', {
               headers: { Authorization: `Bearer ${token}` }
@@ -46,7 +62,7 @@ function Jobs() {
                       recommendations[job._id] = matchRes.data.matchPercentage;
                     }
                   } catch (e) {
-                    // AI service down, skip recommendations silently
+                    // AI service down, skip
                   }
                 }
               }
@@ -54,7 +70,7 @@ function Jobs() {
               setRecommendedJobs(recommendations);
             }
           } catch (e) {
-            // Profile fetch failed, skip recommendations
+            // Profile fetch failed, skip
           }
         }
 
@@ -90,6 +106,7 @@ function Jobs() {
       );
 
       setApplyMessage((prev) => ({ ...prev, [jobId]: '✅ Applied successfully!' }));
+      setAppliedJobs((prev) => ({ ...prev, [jobId]: true }));
 
     } catch (err) {
       setApplyMessage((prev) => ({
@@ -158,14 +175,12 @@ function Jobs() {
 
           <p><strong>Company:</strong> {job.company} &nbsp;·&nbsp; <strong>Location:</strong> {job.location}</p>
 
-          {/* Skills as tags */}
           <div className="skills-tags">
             {job.skillsRequired.map((skill) => (
               <span key={skill} className="skill-tag">{skill}</span>
             ))}
           </div>
 
-          {/* Description with toggle */}
           {job.description && (
             <div>
               <p className="description-text">
@@ -195,39 +210,52 @@ function Jobs() {
 
           {user && user.role === 'candidate' && job.status === 'open' && (
             <div style={{ marginTop: '12px' }}>
-              <div className="form-field">
-                <label>Upload CV (PDF) — recommended for AI matching</label>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => setCvFileByJob((prev) => ({ ...prev, [job._id]: e.target.files[0] }))}
-                />
-                {cvFileByJob[job._id] && (
-                  <p style={{ fontSize: '13px', color: 'var(--color-accent)', marginTop: '4px' }}>
-                    ✅ {cvFileByJob[job._id].name} selected
-                  </p>
-                )}
-              </div>
 
-              {!cvFileByJob[job._id] && (
-                <div className="form-field">
-                  <label>Or paste your CV text (optional)</label>
-                  <textarea
-                    id={`resume-${job._id}`}
-                    rows={3}
-                    style={{ width: '100%' }}
-                    placeholder="e.g. Experienced developer skilled in React, Node.js..."
-                    value={resumeTextByJob[job._id] || ''}
-                    onChange={(e) =>
-                      setResumeTextByJob((prev) => ({ ...prev, [job._id]: e.target.value }))
-                    }
-                  />
-                </div>
+              {/* Already applied — show disabled button */}
+              {appliedJobs[job._id] ? (
+                <button
+                  disabled
+                  style={{ background: 'var(--color-text-muted)', cursor: 'not-allowed', opacity: 0.7 }}
+                >
+                  ✅ Already Applied
+                </button>
+              ) : (
+                <>
+                  <div className="form-field">
+                    <label>Upload CV (PDF) — recommended for AI matching</label>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => setCvFileByJob((prev) => ({ ...prev, [job._id]: e.target.files[0] }))}
+                    />
+                    {cvFileByJob[job._id] && (
+                      <p style={{ fontSize: '13px', color: 'var(--color-accent)', marginTop: '4px' }}>
+                        ✅ {cvFileByJob[job._id].name} selected
+                      </p>
+                    )}
+                  </div>
+
+                  {!cvFileByJob[job._id] && (
+                    <div className="form-field">
+                      <label>Or paste your CV text (optional)</label>
+                      <textarea
+                        id={`resume-${job._id}`}
+                        rows={3}
+                        style={{ width: '100%' }}
+                        placeholder="e.g. Experienced developer skilled in React, Node.js..."
+                        value={resumeTextByJob[job._id] || ''}
+                        onChange={(e) =>
+                          setResumeTextByJob((prev) => ({ ...prev, [job._id]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  )}
+
+                  <button onClick={() => handleApply(job._id)}>
+                    Apply
+                  </button>
+                </>
               )}
-
-              <button onClick={() => handleApply(job._id)}>
-                Apply
-              </button>
             </div>
           )}
 
