@@ -120,7 +120,6 @@ function MyApplicants() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update the application in UI
       setApplicantsByJob((prev) => ({
         ...prev,
         [jobId]: prev[jobId].map((app) =>
@@ -130,28 +129,37 @@ function MyApplicants() {
 
       setSchedulingAppId(null);
       setInterviewForm({ scheduledAt: '', location: '', notes: '' });
-      setStatusMessage((prev) => ({ ...prev, [applicationId]: 'Interview scheduled!' }));
+      setStatusMessage((prev) => ({ ...prev, [applicationId]: '✅ Interview scheduled!' }));
 
     } catch (err) {
       alert(err.response?.data?.message || 'Could not schedule interview');
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <div className="spinner"></div>;
+  if (error) return (
+    <div className="empty-state">
+      <h3>Something went wrong</h3>
+      <p>{error}</p>
+    </div>
+  );
 
   return (
     <div>
       <h2 className="page-title">My Job Applicants</h2>
       <div className="page-container">
 
-      {jobs.length === 0 && <p>You haven't posted any jobs yet.</p>}
+      {jobs.length === 0 && (
+        <div className="empty-state">
+          <h3>📭 No jobs posted yet</h3>
+          <p>Post your first job to start receiving applications.</p>
+        </div>
+      )}
 
       {jobs.map((job) => (
         <div key={job._id} className="job-card">
 
           {editingJobId === job._id ? (
-            // ---- EDIT MODE ----
             <div>
               <h3 style={{ marginTop: 0 }}>Editing: {job.title}</h3>
               <div className="form-field">
@@ -184,7 +192,6 @@ function MyApplicants() {
               </div>
             </div>
           ) : (
-            // ---- VIEW MODE ----
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0 }}>
@@ -225,7 +232,6 @@ function MyApplicants() {
                         )}
                       </div>
 
-                      {/* Interview status display */}
                       {app.interview?.scheduledAt && (
                         <div style={{ marginBottom: '8px', padding: '8px', background: 'var(--color-bg)', borderRadius: '6px', fontSize: '13px' }}>
                           <strong>📅 Interview:</strong> {new Date(app.interview.scheduledAt).toLocaleString()} —{' '}
@@ -237,12 +243,8 @@ function MyApplicants() {
                       )}
 
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button onClick={() => handleStatusUpdate(app._id, job._id, 'accepted')}>
-                          Accept
-                        </button>
-                        <button onClick={() => handleStatusUpdate(app._id, job._id, 'rejected')} style={{ background: 'var(--color-rejected)' }}>
-                          Reject
-                        </button>
+                        <button onClick={() => handleStatusUpdate(app._id, job._id, 'accepted')}>Accept</button>
+                        <button onClick={() => handleStatusUpdate(app._id, job._id, 'rejected')} style={{ background: 'var(--color-rejected)' }}>Reject</button>
                         <button
                           onClick={() => setSchedulingAppId(schedulingAppId === app._id ? null : app._id)}
                           style={{ background: 'var(--color-pending)' }}
@@ -252,42 +254,23 @@ function MyApplicants() {
                         {statusMessage[app._id] && <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', alignSelf: 'center' }}>{statusMessage[app._id]}</span>}
                       </div>
 
-                      {/* Interview scheduling form */}
                       {schedulingAppId === app._id && (
                         <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-bg)', borderRadius: '8px' }}>
                           <div className="form-field">
                             <label>Date & Time</label>
-                            <input
-                              type="datetime-local"
-                              value={interviewForm.scheduledAt}
-                              onChange={(e) => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })}
-                            />
+                            <input type="datetime-local" value={interviewForm.scheduledAt} onChange={(e) => setInterviewForm({ ...interviewForm, scheduledAt: e.target.value })} />
                           </div>
                           <div className="form-field">
                             <label>Location (address or meeting link)</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. https://meet.google.com/abc or Office - Floor 3"
-                              value={interviewForm.location}
-                              onChange={(e) => setInterviewForm({ ...interviewForm, location: e.target.value })}
-                            />
+                            <input type="text" placeholder="e.g. https://meet.google.com/abc" value={interviewForm.location} onChange={(e) => setInterviewForm({ ...interviewForm, location: e.target.value })} />
                           </div>
                           <div className="form-field">
                             <label>Notes (optional)</label>
-                            <textarea
-                              rows={2}
-                              placeholder="e.g. Please bring your portfolio"
-                              value={interviewForm.notes}
-                              onChange={(e) => setInterviewForm({ ...interviewForm, notes: e.target.value })}
-                            />
+                            <textarea rows={2} placeholder="e.g. Please bring your portfolio" value={interviewForm.notes} onChange={(e) => setInterviewForm({ ...interviewForm, notes: e.target.value })} />
                           </div>
                           <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => handleScheduleInterview(app._id, job._id)}>
-                              Send Interview Invitation
-                            </button>
-                            <button onClick={() => setSchedulingAppId(null)} style={{ background: 'var(--color-text-muted)' }}>
-                              Cancel
-                            </button>
+                            <button onClick={() => handleScheduleInterview(app._id, job._id)}>Send Interview Invitation</button>
+                            <button onClick={() => setSchedulingAppId(null)} style={{ background: 'var(--color-text-muted)' }}>Cancel</button>
                           </div>
                         </div>
                       )}
@@ -295,7 +278,10 @@ function MyApplicants() {
                   ))}
                 </ul>
               ) : (
-                <p>No applicants yet.</p>
+                <div className="empty-state" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px' }}>👥 No applicants yet</h3>
+                  <p>Applications will appear here when candidates apply.</p>
+                </div>
               )}
             </>
           )}

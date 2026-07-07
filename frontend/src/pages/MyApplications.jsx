@@ -51,15 +51,25 @@ function MyApplications() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <div className="spinner"></div>;
+  if (error) return (
+    <div className="empty-state">
+      <h3>Something went wrong</h3>
+      <p>{error}</p>
+    </div>
+  );
 
   return (
     <div>
       <h2 className="page-title">My Applications</h2>
       <div className="page-container">
 
-      {applications.length === 0 && <p>You haven't applied to any jobs yet.</p>}
+      {applications.length === 0 && (
+        <div className="empty-state">
+          <h3>📭 No applications yet</h3>
+          <p>Browse available jobs and apply to get started!</p>
+        </div>
+      )}
 
       {applications.map((app) => (
         <div key={app._id} className="job-card">
@@ -103,7 +113,6 @@ function MyApplications() {
                 </span>
               </p>
 
-              {/* Only show buttons if interview is still proposed */}
               {app.interview.status === 'proposed' && (
                 <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
                   <button onClick={() => handleInterviewResponse(app._id, 'confirmed')}>

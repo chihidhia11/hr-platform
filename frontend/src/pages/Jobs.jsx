@@ -20,7 +20,6 @@ function Jobs() {
         const res = await API.get('/jobs');
         setJobs(res.data);
 
-        // If candidate is logged in, fetch their profile skills and calculate recommendations
         if (user && user.role === 'candidate' && token) {
           try {
             const profileRes = await API.get('/auth/profile', {
@@ -89,7 +88,7 @@ function Jobs() {
         }
       );
 
-      setApplyMessage((prev) => ({ ...prev, [jobId]: 'Applied successfully!' }));
+      setApplyMessage((prev) => ({ ...prev, [jobId]: '✅ Applied successfully!' }));
 
     } catch (err) {
       setApplyMessage((prev) => ({
@@ -106,8 +105,13 @@ function Jobs() {
     job.skillsRequired.some((skill) => skill.toLowerCase().includes(search.toLowerCase()))
   );
 
-  if (loading) return <p>Loading jobs...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <div className="spinner"></div>;
+  if (error) return (
+    <div className="empty-state">
+      <h3>Something went wrong</h3>
+      <p>{error}</p>
+    </div>
+  );
 
   return (
     <div>
@@ -122,7 +126,12 @@ function Jobs() {
         style={{ width: '100%', marginBottom: '20px' }}
       />
 
-      {filteredJobs.length === 0 && <p>No jobs found.</p>}
+      {filteredJobs.length === 0 && (
+        <div className="empty-state">
+          <h3>{search ? '🔍 No jobs match your search' : '📭 No jobs available yet'}</h3>
+          <p>{search ? 'Try different keywords or clear your search.' : 'Check back later for new opportunities.'}</p>
+        </div>
+      )}
 
       {filteredJobs.map((job) => (
         <div key={job._id} className="job-card">
@@ -192,7 +201,11 @@ function Jobs() {
             </div>
           )}
 
-          {applyMessage[job._id] && <p>{applyMessage[job._id]}</p>}
+          {applyMessage[job._id] && (
+            <p style={{ marginTop: '8px', color: applyMessage[job._id].startsWith('✅') ? 'var(--color-accepted)' : 'var(--color-rejected)' }}>
+              {applyMessage[job._id]}
+            </p>
+          )}
         </div>
       ))}
       </div>
