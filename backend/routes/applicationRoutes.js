@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const applicationController = require('../controllers/applicationController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
-// Candidate applies to a job
-router.post('/jobs/:jobId/apply', protect, authorize('candidate'), applicationController.applyToJob);
+// Candidate applies to a job (with optional PDF upload)
+router.post('/jobs/:jobId/apply', protect, authorize('candidate'), upload.single('cv'), applicationController.applyToJob);
 
 // Recruiter views applications for a specific job
 router.get('/jobs/:jobId/applications', protect, authorize('recruiter', 'admin'), applicationController.getApplicationsForJob);

@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import re
+import PyPDF2
+import io
 
 app = Flask(__name__)
 CORS(app)
@@ -8,6 +10,27 @@ CORS(app)
 @app.route('/')
 def home():
     return jsonify({"message": "AI CV Filtering service is running!"})
+
+@app.route('/extract-pdf', methods=['POST'])
+def extract_pdf():
+    if 'pdf' not in request.files:
+        return jsonify({"error": "No PDF file provided"}), 400
+
+    pdf_file = request.files['pdf']
+
+    try:
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_file.read()))
+        text = ''
+        for page in pdf_reader.pages:
+            text += page.extract_text() or ''
+
+        if not text.strip():
+            return jsonify({"error": "Could not extract text from PDF"}), 400
+
+        return jsonify({"text": text})
+
+    except Exception as e:
+        return jsonify({"error": f"PDF extraction failed: {str(e)}"}), 500
 
 @app.route('/match', methods=['POST'])
 def match_cv():
@@ -34,8 +57,7 @@ def match_cv():
         if match:
             # Check the few words right before the skill for negation
             preceding_text = cv_text_lower[:match.start()]
-            preceding_words = preceding_text.split()[-4:]  # look at last 4 words before the skill
-            
+            preceding_words = preceding_text.split()[-4:]
 
             is_negated = any(neg in preceding_words for neg in negation_words)
 

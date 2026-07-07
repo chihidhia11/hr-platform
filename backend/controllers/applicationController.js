@@ -1,12 +1,15 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const axios = require('axios');
+const fs = require('fs');
+const FormData = require('form-data');
 
 // CANDIDATE applies to a job
 exports.applyToJob = async (req, res) => {
   try {
     const { jobId } = req.params;
-    const { cvUrl, resumeText } = req.body;
+    let resumeText = req.body.resumeText || '';
+    const cvUrl = req.file ? req.file.filename : (req.body.cvUrl || '');
 
     // Check if job exists
     const job = await Job.findById(jobId);
@@ -24,9 +27,25 @@ exports.applyToJob = async (req, res) => {
       return res.status(400).json({ message: 'You already applied to this job' });
     }
 
+    // If PDF was uploaded, extract text from it via Python service
+    if (req.file) {
+      try {
+        const formData = new FormData();
+        formData.append('pdf', fs.createReadStream(req.file.path));
+
+        const extractRes = await axios.post('http://127.0.0.1:5001/extract-pdf', formData, {
+          headers: formData.getHeaders()
+        });
+
+        resumeText = extractRes.data.text;
+      } catch (extractError) {
+        console.log('PDF extraction failed (continuing without text):', extractError.message);
+      }
+    }
+
     let matchPercentage = null;
 
-    // Call the AI service to calculate skill match, if resumeText was provided
+    // Call AI matching if we have resume text
     if (resumeText && job.skillsRequired?.length > 0) {
       try {
         const aiResponse = await axios.post('http://127.0.0.1:5001/match', {

@@ -7,6 +7,7 @@ function Jobs() {
   const [error, setError] = useState('');
   const [applyMessage, setApplyMessage] = useState({});
   const [resumeTextByJob, setResumeTextByJob] = useState({});
+  const [cvFileByJob, setCvFileByJob] = useState({});
   const [search, setSearch] = useState('');
 
   const user = JSON.parse(localStorage.getItem('user'));
@@ -29,13 +30,25 @@ function Jobs() {
 
   const handleApply = async (jobId) => {
     try {
+      const formData = new FormData();
+
+      // If a PDF was selected, use it
+      if (cvFileByJob[jobId]) {
+        formData.append('cv', cvFileByJob[jobId]);
+      } else {
+        // Otherwise use text input
+        formData.append('resumeText', resumeTextByJob[jobId] || '');
+      }
+
       await API.post(
         `/applications/jobs/${jobId}/apply`,
+        formData,
         {
-          cvUrl: 'http://example.com/my-cv.pdf',
-          resumeText: resumeTextByJob[jobId] || ''
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       );
 
       setApplyMessage((prev) => ({ ...prev, [jobId]: 'Applied successfully!' }));
@@ -90,17 +103,39 @@ function Jobs() {
 
           {user && user.role === 'candidate' && job.status === 'open' && (
             <div style={{ marginTop: '12px' }}>
-              <label htmlFor={`resume-${job._id}`}>Paste your CV text (optional, for AI skill match)</label>
-              <textarea
-                id={`resume-${job._id}`}
-                rows={3}
-                style={{ width: '100%', marginBottom: '10px' }}
-                placeholder="e.g. Experienced developer skilled in React, Node.js..."
-                value={resumeTextByJob[job._id] || ''}
-                onChange={(e) =>
-                  setResumeTextByJob((prev) => ({ ...prev, [job._id]: e.target.value }))
-                }
-              />
+
+              {/* PDF Upload Option */}
+              <div className="form-field">
+                <label>Upload CV (PDF) — recommended for AI matching</label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setCvFileByJob((prev) => ({ ...prev, [job._id]: e.target.files[0] }))}
+                />
+                {cvFileByJob[job._id] && (
+                  <p style={{ fontSize: '13px', color: 'var(--color-accent)', marginTop: '4px' }}>
+                    ✅ {cvFileByJob[job._id].name} selected
+                  </p>
+                )}
+              </div>
+
+              {/* Text fallback — only show if no PDF selected */}
+              {!cvFileByJob[job._id] && (
+                <div className="form-field">
+                  <label>Or paste your CV text (optional)</label>
+                  <textarea
+                    id={`resume-${job._id}`}
+                    rows={3}
+                    style={{ width: '100%' }}
+                    placeholder="e.g. Experienced developer skilled in React, Node.js..."
+                    value={resumeTextByJob[job._id] || ''}
+                    onChange={(e) =>
+                      setResumeTextByJob((prev) => ({ ...prev, [job._id]: e.target.value }))
+                    }
+                  />
+                </div>
+              )}
+
               <button onClick={() => handleApply(job._id)}>
                 Apply
               </button>
