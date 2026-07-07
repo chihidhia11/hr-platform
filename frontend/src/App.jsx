@@ -21,6 +21,9 @@ function App() {
   return (
     <div>
       <nav className="navbar">
+        <Link to="/" style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+          HR<span style={{ color: 'var(--color-accent)' }}>Platform</span>
+        </Link>
         <Link to="/">Jobs</Link>
 
         {user ? (
