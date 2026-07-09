@@ -25,12 +25,20 @@ const applicationSchema = new mongoose.Schema({
   matchPercentage: {
     type: Number
   },
+  matchedSkills: {
+    type: [String],
+    default: []
+  },
+  missingSkills: {
+    type: [String],
+    default: []
+  },
   interview: {
     scheduledAt: {
       type: Date
     },
     location: {
-      type: String // can be a URL (Zoom/Meet) or physical address
+      type: String
     },
     status: {
       type: String,

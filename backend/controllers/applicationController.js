@@ -42,6 +42,8 @@ exports.applyToJob = async (req, res) => {
     }
 
     let matchPercentage = null;
+    let matchedSkills = [];
+    let missingSkills = [];
 
     if (resumeText && job.skillsRequired?.length > 0) {
       try {
@@ -50,6 +52,8 @@ exports.applyToJob = async (req, res) => {
           requiredSkills: job.skillsRequired
         });
         matchPercentage = aiResponse.data.matchPercentage;
+        matchedSkills = aiResponse.data.matchedSkills || [];
+        missingSkills = aiResponse.data.missingSkills || [];
       } catch (aiError) {
         console.log('AI service error (continuing without match score):', aiError.message);
       }
@@ -60,7 +64,9 @@ exports.applyToJob = async (req, res) => {
       candidate: req.user.id,
       cvUrl,
       resumeText,
-      matchPercentage
+      matchPercentage,
+      matchedSkills,
+      missingSkills
     });
 
     await newApplication.save();
@@ -173,7 +179,6 @@ exports.scheduleInterview = async (req, res) => {
 
     await application.save();
 
-    // Send email to candidate about the interview
     try {
       const { sendInterviewEmail } = require('../emailService');
       await sendInterviewEmail(

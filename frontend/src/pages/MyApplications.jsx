@@ -56,11 +56,24 @@ function MyApplications() {
     const matchesSearch =
       app.job?.title?.toLowerCase().includes(search.toLowerCase()) ||
       app.job?.company?.toLowerCase().includes(search.toLowerCase());
-
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
-
     return matchesSearch && matchesStatus;
   });
+
+  const SkillTag = ({ skill, type }) => (
+    <span style={{
+      background: type === 'matched' ? 'rgba(15, 118, 110, 0.12)' : 'rgba(185, 28, 28, 0.10)',
+      color: type === 'matched' ? '#0F766E' : '#B91C1C',
+      padding: '3px 10px',
+      borderRadius: '100px',
+      fontSize: '12px',
+      fontWeight: 600,
+      display: 'inline-block',
+      margin: '2px'
+    }}>
+      {skill}
+    </span>
+  );
 
   if (loading) return <div className="spinner"></div>;
   if (error) return (
@@ -121,6 +134,7 @@ function MyApplications() {
           </div>
 
           <p><strong>Company:</strong> {app.job?.company} &nbsp;·&nbsp; <strong>Location:</strong> {app.job?.location}</p>
+
           <p>
             <strong>Status:</strong>{' '}
             <span className={`status-pill status-${app.status}`}>{app.status}</span>
@@ -131,6 +145,24 @@ function MyApplications() {
             )}
           </p>
 
+          {/* Skill breakdown */}
+          {app.matchedSkills && app.matchedSkills.length > 0 && (
+            <div style={{ marginTop: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#5B6470' }}>✅ Matched: </span>
+              {app.matchedSkills.map((skill) => (
+                <SkillTag key={skill} skill={skill} type="matched" />
+              ))}
+            </div>
+          )}
+          {app.missingSkills && app.missingSkills.length > 0 && (
+            <div style={{ marginTop: '4px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#5B6470' }}>❌ Missing: </span>
+              {app.missingSkills.map((skill) => (
+                <SkillTag key={skill} skill={skill} type="missing" />
+              ))}
+            </div>
+          )}
+
           {app.interview?.scheduledAt && (
             <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-bg)', borderRadius: '8px', borderLeft: '4px solid var(--color-accent)' }}>
               <p style={{ margin: '0 0 8px', fontWeight: 600 }}>📅 Interview Scheduled</p>
@@ -140,7 +172,7 @@ function MyApplications() {
               <p style={{ margin: '4px 0', fontSize: '14px' }}>
                 <strong>Location:</strong>{' '}
                 {app.interview.location?.startsWith('http') ? (
-                  <a href={app.interview.location} target="_blank" rel="noreferrer">{app.interview.location}</a>
+                  <a href={app.interview.location} target="_blank" rel="noopener noreferrer">{app.interview.location}</a>
                 ) : (
                   app.interview.location
                 )}
