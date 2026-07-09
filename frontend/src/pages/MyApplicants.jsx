@@ -225,7 +225,7 @@ function MyApplicants() {
                   {applicantsByJob[job._id].map((app) => (
                     <li key={app._id} style={{ marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid var(--color-border)' }}>
                       <div style={{ marginBottom: '8px' }}>
-                        {app.candidate?.name} ({app.candidate?.email}) —{' '}
+                        <strong>{app.candidate?.name}</strong> ({app.candidate?.email}) —{' '}
                         <span className={`status-pill status-${app.status}`}>{app.status}</span>
                         {app.matchPercentage !== null && app.matchPercentage !== undefined && (
                           <span style={{ marginLeft: '10px', fontWeight: 700, color: 'var(--color-accent)' }}>
@@ -233,6 +233,12 @@ function MyApplicants() {
                           </span>
                         )}
                       </div>
+
+                      {app.cvUrl && !app.cvUrl.startsWith('http') && (
+                        <div style={{ marginBottom: '8px' }}>
+                          <a href={`http://localhost:3000/uploads/${app.cvUrl}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', color: 'var(--color-accent)' }}>📄 View CV</a>
+                        </div>
+                      )}
 
                       {app.interview?.scheduledAt && (
                         <div style={{ marginBottom: '8px', padding: '8px', background: 'var(--color-bg)', borderRadius: '6px', fontSize: '13px' }}>
