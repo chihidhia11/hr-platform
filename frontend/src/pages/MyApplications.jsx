@@ -6,6 +6,8 @@ function MyApplications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const token = localStorage.getItem('token');
   const { showToast } = useToast();
@@ -49,6 +51,16 @@ function MyApplications() {
     }
   };
 
+  const filteredApplications = applications.filter((app) => {
+    const matchesSearch =
+      app.job?.title?.toLowerCase().includes(search.toLowerCase()) ||
+      app.job?.company?.toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) return <div className="spinner"></div>;
   if (error) return (
     <div className="empty-state">
@@ -62,6 +74,29 @@ function MyApplications() {
       <h2 className="page-title">My Applications</h2>
       <div className="page-container">
 
+      {/* Search and filter */}
+      {applications.length > 0 && (
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+          <input
+            type="text"
+            placeholder="Search by job title or company..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ width: '140px' }}
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      )}
+
       {applications.length === 0 && (
         <div className="empty-state">
           <h3>📭 No applications yet</h3>
@@ -69,7 +104,14 @@ function MyApplications() {
         </div>
       )}
 
-      {applications.map((app) => (
+      {applications.length > 0 && filteredApplications.length === 0 && (
+        <div className="empty-state">
+          <h3>🔍 No applications match your search</h3>
+          <p>Try different keywords or clear your filters.</p>
+        </div>
+      )}
+
+      {filteredApplications.map((app) => (
         <div key={app._id} className="job-card">
           <h3>{app.job?.title}</h3>
           <p><strong>Company:</strong> {app.job?.company}</p>

@@ -9,6 +9,7 @@ function Jobs() {
   const [resumeTextByJob, setResumeTextByJob] = useState({});
   const [cvFileByJob, setCvFileByJob] = useState({});
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const [recommendedJobs, setRecommendedJobs] = useState({});
   const [expandedJobs, setExpandedJobs] = useState({});
   const [appliedJobs, setAppliedJobs] = useState({});
@@ -110,12 +111,28 @@ function Jobs() {
     setExpandedJobs((prev) => ({ ...prev, [jobId]: !prev[jobId] }));
   };
 
+  // Filter
   const filteredJobs = jobs.filter((job) =>
     job.title.toLowerCase().includes(search.toLowerCase()) ||
     job.company.toLowerCase().includes(search.toLowerCase()) ||
     job.location.toLowerCase().includes(search.toLowerCase()) ||
     job.skillsRequired.some((skill) => skill.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // Sort
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+    if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+    if (sortBy === 'salary-high') return (b.salary || 0) - (a.salary || 0);
+    if (sortBy === 'salary-low') return (a.salary || 0) - (b.salary || 0);
+    if (sortBy === 'applicants') return (b.applicantCount || 0) - (a.applicantCount || 0);
+    if (sortBy === 'recommended') {
+      const aMatch = recommendedJobs[a._id] || 0;
+      const bMatch = recommendedJobs[b._id] || 0;
+      return bMatch - aMatch;
+    }
+    return 0;
+  });
 
   if (loading) return <div className="spinner"></div>;
   if (error) return (
@@ -130,22 +147,37 @@ function Jobs() {
       <h2 className="page-title">Available Jobs</h2>
       <div className="page-container">
 
-      <input
-        type="text"
-        placeholder="Search by title, company, location or skill..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ width: '100%', marginBottom: '20px' }}
-      />
+      {/* Search and sort */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search by title, company, location or skill..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1 }}
+        />
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          style={{ width: '160px' }}
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="salary-high">Salary: High to Low</option>
+          <option value="salary-low">Salary: Low to High</option>
+          <option value="applicants">Most Applicants</option>
+          {user?.role === 'candidate' && <option value="recommended">Best Match</option>}
+        </select>
+      </div>
 
-      {filteredJobs.length === 0 && (
+      {sortedJobs.length === 0 && (
         <div className="empty-state">
           <h3>{search ? '🔍 No jobs match your search' : '📭 No jobs available yet'}</h3>
           <p>{search ? 'Try different keywords or clear your search.' : 'Check back later for new opportunities.'}</p>
         </div>
       )}
 
-      {filteredJobs.map((job) => (
+      {sortedJobs.map((job) => (
         <div key={job._id} className="job-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <h3 style={{ margin: 0 }}>{job.title}</h3>
