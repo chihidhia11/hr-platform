@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import API from '../api/axios';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 function PostJob() {
   const [title, setTitle] = useState('');
@@ -9,8 +10,8 @@ function PostJob() {
   const [location, setLocation] = useState('');
   const [skillsRequired, setSkillsRequired] = useState('');
   const [salary, setSalary] = useState('');
-  const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const token = localStorage.getItem('token');
 
@@ -31,14 +32,14 @@ function PostJob() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setMessage('Job posted successfully! Redirecting...');
+      showToast('✅ Job posted successfully!', 'success');
 
       setTimeout(() => {
         navigate('/');
       }, 1000);
 
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Something went wrong');
+      showToast(error.response?.data?.message || 'Something went wrong', 'error');
     }
   };
 
@@ -100,11 +101,8 @@ function PostJob() {
             onChange={(e) => setSalary(e.target.value)}
           />
         </div>
-        <button type="submit">
-          Post Job
-        </button>
+        <button type="submit">Post Job</button>
       </form>
-      {message && <p>{message}</p>}
     </div>
   );
 }

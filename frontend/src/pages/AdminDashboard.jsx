@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
+import { useToast } from '../context/ToastContext';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -12,6 +13,7 @@ function AdminDashboard() {
   const [error, setError] = useState('');
 
   const token = localStorage.getItem('token');
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,13 +41,19 @@ function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers((prev) => prev.filter((u) => u._id !== userId));
+      showToast('🗑️ User deleted successfully', 'success');
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not delete user');
+      showToast(err.response?.data?.message || 'Could not delete user', 'error');
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <div className="spinner"></div>;
+  if (error) return (
+    <div className="empty-state">
+      <h3>Something went wrong</h3>
+      <p>{error}</p>
+    </div>
+  );
 
   const usersChartData = {
     labels: ['Candidates', 'Recruiters'],
@@ -89,7 +97,6 @@ function AdminDashboard() {
       <h2 className="page-title">Admin Dashboard</h2>
       <div className="page-container">
 
-        {/* Stats Cards */}
         {stats && (
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
             <div className="job-card" style={{ textAlign: 'center' }}>
@@ -113,7 +120,6 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* Charts */}
         {stats && (
           <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '32px' }}>
             <div className="job-card">
@@ -131,7 +137,6 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* Users Table */}
         <h3>All Users</h3>
         <div className="table-wrapper">
           <div className="job-card" style={{ padding: 0, overflow: 'hidden' }}>

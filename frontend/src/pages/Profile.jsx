@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 function Profile() {
   const [profile, setProfile] = useState(null);
@@ -8,12 +9,12 @@ function Profile() {
   const [skills, setSkills] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,8 +38,6 @@ function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
 
     try {
       const res = await API.put(
@@ -53,8 +52,6 @@ function Profile() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setMessage('Profile updated successfully!');
-
       // Update localStorage with new name/email
       localStorage.setItem('user', JSON.stringify({
         ...user,
@@ -64,20 +61,25 @@ function Profile() {
 
       setCurrentPassword('');
       setNewPassword('');
+      showToast('✅ Profile updated successfully!', 'success');
 
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not update profile');
+      showToast(err.response?.data?.message || 'Could not update profile', 'error');
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error && !profile) return <p>{error}</p>;
+  if (loading) return <div className="spinner"></div>;
+  if (error) return (
+    <div className="empty-state">
+      <h3>Something went wrong</h3>
+      <p>{error}</p>
+    </div>
+  );
 
   return (
     <div className="form-page" style={{ maxWidth: '500px' }}>
       <h2>My Profile</h2>
 
-      {/* Profile info display */}
       <div style={{ marginBottom: '24px', padding: '16px', background: 'var(--color-bg)', borderRadius: '8px' }}>
         <p style={{ margin: '4px 0' }}>
           <strong>Role:</strong>{' '}
@@ -115,7 +117,6 @@ function Profile() {
           />
         </div>
 
-        {/* Skills — only show for candidates */}
         {user?.role === 'candidate' && (
           <div className="form-field">
             <label>My Skills (comma separated)</label>
@@ -154,9 +155,6 @@ function Profile() {
 
         <button type="submit">Save Changes</button>
       </form>
-
-      {message && <p style={{ color: 'var(--color-accepted)', marginTop: '12px' }}>{message}</p>}
-      {error && <p style={{ color: 'var(--color-rejected)', marginTop: '12px' }}>{error}</p>}
     </div>
   );
 }
