@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import { useToast } from '../context/ToastContext';
+import { timeAgo } from '../utils/dateUtils';
 
 function MyApplications() {
   const [applications, setApplications] = useState([]);
@@ -74,7 +75,6 @@ function MyApplications() {
       <h2 className="page-title">My Applications</h2>
       <div className="page-container">
 
-      {/* Search and filter */}
       {applications.length > 0 && (
         <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
           <input
@@ -113,9 +113,14 @@ function MyApplications() {
 
       {filteredApplications.map((app) => (
         <div key={app._id} className="job-card">
-          <h3>{app.job?.title}</h3>
-          <p><strong>Company:</strong> {app.job?.company}</p>
-          <p><strong>Location:</strong> {app.job?.location}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <h3 style={{ margin: 0 }}>{app.job?.title}</h3>
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+              Applied {timeAgo(app.createdAt)}
+            </span>
+          </div>
+
+          <p><strong>Company:</strong> {app.job?.company} &nbsp;·&nbsp; <strong>Location:</strong> {app.job?.location}</p>
           <p>
             <strong>Status:</strong>{' '}
             <span className={`status-pill status-${app.status}`}>{app.status}</span>

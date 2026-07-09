@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import { useToast } from '../context/ToastContext';
+import { timeAgo } from '../utils/dateUtils';
 
 function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -111,7 +112,6 @@ function Jobs() {
     setExpandedJobs((prev) => ({ ...prev, [jobId]: !prev[jobId] }));
   };
 
-  // Filter
   const filteredJobs = jobs.filter((job) =>
     job.title.toLowerCase().includes(search.toLowerCase()) ||
     job.company.toLowerCase().includes(search.toLowerCase()) ||
@@ -119,7 +119,6 @@ function Jobs() {
     job.skillsRequired.some((skill) => skill.toLowerCase().includes(search.toLowerCase()))
   );
 
-  // Sort
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
     if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
@@ -147,7 +146,6 @@ function Jobs() {
       <h2 className="page-title">Available Jobs</h2>
       <div className="page-container">
 
-      {/* Search and sort */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
         <input
           type="text"
@@ -224,7 +222,7 @@ function Jobs() {
           {job.salary && <p style={{ marginTop: '8px' }}><strong>Salary:</strong> {job.salary} TND</p>}
 
           <p style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><strong>Posted by:</strong> {job.postedBy?.name}</span>
+            <span><strong>Posted by:</strong> {job.postedBy?.name} · <span style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>{timeAgo(job.createdAt)}</span></span>
             <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
               👥 {job.applicantCount || 0} {job.applicantCount === 1 ? 'applicant' : 'applicants'}
             </span>
