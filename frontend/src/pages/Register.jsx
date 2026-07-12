@@ -18,10 +18,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // prevent double submit
     setLoading(true);
     try {
       await API.post('/auth/register', { name, email, password, role });
-      showToast('🎉 Account created! Redirecting...', 'success');
+      showToast('🎉 Account created! Check your email to verify.', 'success');
       setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
       showToast(error.response?.data?.message || 'Something went wrong', 'error');
@@ -62,7 +63,6 @@ export default function Register() {
         background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 40%, #0C4A6E 70%, #164E63 100%)',
       }}>
 
-        {/* Animated blobs */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
           <div style={{
             position: 'absolute', top: '-20%', right: '-10%',
@@ -92,31 +92,22 @@ export default function Register() {
           }} />
         </div>
 
-        {/* Content */}
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px', width: '100%' }}>
-
-          {/* Logo */}
           <div style={{ marginBottom: '48px' }}>
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '24px',
-              fontWeight: 800,
-              color: 'white',
-              letterSpacing: '-0.03em'
+              fontSize: '24px', fontWeight: 800,
+              color: 'white', letterSpacing: '-0.03em'
             }}>
               HR<span style={{ color: '#06B6D4' }}>Platform</span>
             </span>
           </div>
 
-          {/* Headline */}
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: '48px',
-            fontWeight: 900,
-            color: 'white',
-            lineHeight: 1.1,
-            marginBottom: '20px',
-            letterSpacing: '-0.03em'
+            fontSize: '48px', fontWeight: 900,
+            color: 'white', lineHeight: 1.1,
+            marginBottom: '20px', letterSpacing: '-0.03em'
           }}>
             Start Your<br />
             <span style={{
@@ -128,16 +119,12 @@ export default function Register() {
           </h1>
 
           <p style={{
-            fontSize: '17px',
-            color: 'rgba(255,255,255,0.6)',
-            lineHeight: 1.7,
-            marginBottom: '48px',
-            maxWidth: '360px'
+            fontSize: '17px', color: 'rgba(255,255,255,0.6)',
+            lineHeight: 1.7, marginBottom: '48px', maxWidth: '360px'
           }}>
             Join thousands of professionals finding their dream jobs with AI-powered matching.
           </p>
 
-          {/* Floating stat cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
               { icon: '🚀', label: 'Get Started in 60 Seconds', sub: 'Quick & easy signup', color: 'rgba(37,99,235,0.3)' },
@@ -145,25 +132,21 @@ export default function Register() {
               { icon: '📧', label: 'Instant Notifications', sub: 'Never miss an opportunity', color: 'rgba(124,58,237,0.3)' },
             ].map((card, i) => (
               <div key={i} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
+                display: 'flex', alignItems: 'center', gap: '14px',
                 background: 'rgba(255,255,255,0.06)',
                 backdropFilter: 'blur(12px)',
                 border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '14px',
-                padding: '14px 18px',
+                borderRadius: '14px', padding: '14px 18px',
                 animation: `slideUp 0.6s ease ${i * 0.1 + 0.2}s both`,
-                transition: 'background 0.2s ease',
-                cursor: 'default'
+                transition: 'background 0.2s ease', cursor: 'default'
               }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
               >
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '10px',
-                  background: card.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: card.color, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
                   fontSize: '18px', flexShrink: 0
                 }}>
                   {card.icon}
@@ -181,26 +164,17 @@ export default function Register() {
       {/* ===== RIGHT SIDE ===== */}
       <div style={{
         flex: '0 0 45%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '60px 48px',
-        background: '#F8FAFC',
-        overflowY: 'auto'
+        display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', alignItems: 'center',
+        padding: '60px 48px', background: '#F8FAFC', overflowY: 'auto'
       }}>
-
         <div style={{ width: '100%', maxWidth: '380px' }}>
 
-          {/* Header */}
           <div style={{ marginBottom: '32px' }}>
             <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '32px',
-              fontWeight: 800,
-              color: '#0F172A',
-              marginBottom: '8px',
-              letterSpacing: '-0.02em'
+              fontFamily: 'var(--font-display)', fontSize: '32px',
+              fontWeight: 800, color: '#0F172A',
+              marginBottom: '8px', letterSpacing: '-0.02em'
             }}>
               Create Account ✨
             </h2>
@@ -217,15 +191,11 @@ export default function Register() {
                 type="button"
                 onClick={() => setRole(r)}
                 style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '10px',
+                  flex: 1, padding: '10px', borderRadius: '10px',
                   border: `1.5px solid ${role === r ? '#2563EB' : '#E2E8F0'}`,
                   background: role === r ? 'rgba(37,99,235,0.06)' : 'white',
                   color: role === r ? '#2563EB' : '#64748B',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  cursor: 'pointer',
+                  fontWeight: 600, fontSize: '13px', cursor: 'pointer',
                   transition: 'all 0.15s',
                   boxShadow: role === r ? '0 0 0 4px rgba(37,99,235,0.08)' : 'none',
                   transform: 'none'
@@ -237,26 +207,24 @@ export default function Register() {
           </div>
 
           <form onSubmit={handleSubmit}>
-
             {/* Name */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{
                 fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: '#64748B', marginBottom: '6px', display: 'block'
+                textTransform: 'uppercase', color: '#64748B',
+                marginBottom: '6px', display: 'block'
               }}>Full Name</label>
               <div style={{ position: 'relative' }}>
                 <span style={{
-                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
-                  fontSize: '16px', pointerEvents: 'none'
+                  position: 'absolute', left: '14px', top: '50%',
+                  transform: 'translateY(-50%)', fontSize: '16px', pointerEvents: 'none'
                 }}>👤</span>
                 <input
-                  type="text"
-                  value={name}
+                  type="text" value={name}
                   onChange={(e) => setName(e.target.value)}
                   onFocus={() => setNameFocused(true)}
                   onBlur={() => setNameFocused(false)}
-                  placeholder="Dhia Chihi"
-                  required
+                  placeholder="Dhia Chihi" required
                   style={inputStyle(nameFocused)}
                 />
               </div>
@@ -266,21 +234,20 @@ export default function Register() {
             <div style={{ marginBottom: '16px' }}>
               <label style={{
                 fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: '#64748B', marginBottom: '6px', display: 'block'
+                textTransform: 'uppercase', color: '#64748B',
+                marginBottom: '6px', display: 'block'
               }}>Email</label>
               <div style={{ position: 'relative' }}>
                 <span style={{
-                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
-                  fontSize: '16px', pointerEvents: 'none'
+                  position: 'absolute', left: '14px', top: '50%',
+                  transform: 'translateY(-50%)', fontSize: '16px', pointerEvents: 'none'
                 }}>✉️</span>
                 <input
-                  type="email"
-                  value={email}
+                  type="email" value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setEmailFocused(true)}
                   onBlur={() => setEmailFocused(false)}
-                  placeholder="you@example.com"
-                  required
+                  placeholder="you@example.com" required
                   style={inputStyle(emailFocused)}
                 />
               </div>
@@ -290,12 +257,13 @@ export default function Register() {
             <div style={{ marginBottom: '24px' }}>
               <label style={{
                 fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: '#64748B', marginBottom: '6px', display: 'block'
+                textTransform: 'uppercase', color: '#64748B',
+                marginBottom: '6px', display: 'block'
               }}>Password</label>
               <div style={{ position: 'relative' }}>
                 <span style={{
-                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
-                  fontSize: '16px', pointerEvents: 'none'
+                  position: 'absolute', left: '14px', top: '50%',
+                  transform: 'translateY(-50%)', fontSize: '16px', pointerEvents: 'none'
                 }}>🔒</span>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -303,17 +271,17 @@ export default function Register() {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
-                  placeholder="••••••••"
-                  required
+                  placeholder="••••••••" required
                   style={{ ...inputStyle(passwordFocused), paddingRight: '44px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
-                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    fontSize: '16px', padding: '4px', boxShadow: 'none', color: '#94A3B8'
+                    position: 'absolute', right: '12px', top: '50%',
+                    transform: 'translateY(-50%)', background: 'none',
+                    border: 'none', cursor: 'pointer', fontSize: '16px',
+                    padding: '4px', boxShadow: 'none', color: '#94A3B8'
                   }}
                 >
                   {showPassword ? '🙈' : '👁️'}
@@ -326,26 +294,16 @@ export default function Register() {
               type="submit"
               disabled={loading}
               style={{
-                width: '100%',
-                padding: '14px',
-                fontSize: '15px',
-                fontWeight: 700,
-                borderRadius: '10px',
-                background: loading
-                  ? '#94A3B8'
-                  : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%)',
-                color: 'white',
-                border: 'none',
+                width: '100%', padding: '14px', fontSize: '15px',
+                fontWeight: 700, borderRadius: '10px',
+                background: loading ? '#94A3B8' : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%)',
+                color: 'white', border: 'none',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 boxShadow: loading ? 'none' : '0 4px 20px rgba(37,99,235,0.35)',
                 transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                marginBottom: '24px',
-                letterSpacing: '0.01em',
-                transform: 'none'
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: '8px',
+                marginBottom: '24px', letterSpacing: '0.01em', transform: 'none'
               }}
               onMouseEnter={e => {
                 if (!loading) {
@@ -363,25 +321,20 @@ export default function Register() {
                   <div style={{
                     width: '16px', height: '16px',
                     border: '2px solid rgba(255,255,255,0.3)',
-                    borderTop: '2px solid white',
-                    borderRadius: '50%',
+                    borderTop: '2px solid white', borderRadius: '50%',
                     animation: 'spin 0.7s linear infinite'
                   }} />
                   Creating account...
                 </>
-              ) : (
-                <>Create Account →</>
-              )}
+              ) : <>Create Account →</>}
             </button>
 
-            {/* Login link */}
             <p style={{ textAlign: 'center', fontSize: '14px', color: '#64748B' }}>
               Already have an account?{' '}
               <Link to="/login" style={{ color: '#2563EB', fontWeight: 700 }}>
                 Sign In →
               </Link>
             </p>
-
           </form>
         </div>
       </div>
@@ -398,9 +351,6 @@ export default function Register() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-        @media (max-width: 768px) {
-          .login-left { display: none !important; }
         }
       `}</style>
     </div>

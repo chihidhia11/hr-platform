@@ -1,10 +1,14 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { sendVerificationEmail } = require('../emailService');
 
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+
+    console.log('📝 Register attempt for:', email);
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -12,17 +16,34 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    console.log('🔑 Generated token:', verificationToken);
 
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      verificationToken,
+      isVerified: false
     });
 
     await newUser.save();
+    console.log('✅ User saved with token:', newUser.verificationToken);
 
-    res.status(201).json({ message: 'User created successfully', user: newUser });
+    try {
+      await sendVerificationEmail(newUser.email, newUser.name, verificationToken);
+      console.log(`✅ Verification email sent to ${newUser.email}`);
+    } catch (emailError) {
+      console.log('Verification email failed (continuing):', emailError.message);
+    }
+
+    res.status(201).json({
+      message: 'Account created! Please check your email to verify your account.',
+      user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }
+    });
+
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -42,6 +63,13 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: 'Please verify your email before logging in. Check your inbox.',
+        notVerified: true
+      });
+    }
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -58,6 +86,35 @@ exports.login = async (req, res) => {
         role: user.role
       }
     });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// VERIFY email
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    console.log('🔍 Verifying token:', token);
+
+    const user = await User.findOne({ verificationToken: token });
+    console.log('👤 Found user:', user ? user.email : 'NOT FOUND');
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification link' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Account already verified' });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
+
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -86,10 +143,8 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update name if provided
     if (name) user.name = name;
 
-    // Update email if provided and not already taken
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -98,12 +153,10 @@ exports.updateProfile = async (req, res) => {
       user.email = email;
     }
 
-    // Update skills if provided (candidates only)
     if (skills && Array.isArray(skills)) {
       user.skills = skills;
     }
 
-    // Update password if provided
     if (currentPassword && newPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {

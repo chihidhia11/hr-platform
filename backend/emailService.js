@@ -83,4 +83,78 @@ const sendInterviewEmail = async (candidateEmail, candidateName, jobTitle, compa
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendApplicationStatusEmail, sendInterviewEmail };
+const sendVerificationEmail = async (userEmail, userName, verificationToken) => {
+  const verificationUrl = `http://localhost:5173/verify/${verificationToken}`;
+
+  const mailOptions = {
+    from: `"HR Platform" <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: '✉️ Verify your HRPlatform account',
+    html: `
+      <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #F8FAFC; padding: 40px 20px;">
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 32px;">
+          <h1 style="font-size: 28px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.02em;">
+            HR<span style="color: #2563EB;">Platform</span>
+          </h1>
+        </div>
+
+        <!-- Card -->
+        <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #E2E8F0;">
+          
+          <div style="text-align: center; margin-bottom: 28px;">
+            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #2563EB, #06B6D4); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px;">
+              ✉️
+            </div>
+            <h2 style="font-size: 24px; font-weight: 800; color: #0F172A; margin: 0 0 8px;">
+              Verify your email
+            </h2>
+            <p style="color: #64748B; font-size: 15px; margin: 0;">
+              Hi <strong>${userName}</strong>, welcome to HRPlatform!
+            </p>
+          </div>
+
+          <p style="color: #64748B; font-size: 15px; line-height: 1.7; margin-bottom: 28px; text-align: center;">
+            Please click the button below to verify your email address and activate your account. This link expires in <strong>24 hours</strong>.
+          </p>
+
+          <!-- CTA Button -->
+          <div style="text-align: center; margin-bottom: 28px;">
+            <a href="${verificationUrl}" style="
+              display: inline-block;
+              background: linear-gradient(135deg, #2563EB, #1D4ED8);
+              color: white;
+              padding: 14px 32px;
+              border-radius: 10px;
+              font-size: 16px;
+              font-weight: 700;
+              text-decoration: none;
+              box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+              letter-spacing: 0.01em;
+            ">
+              ✅ Verify My Account →
+            </a>
+          </div>
+
+          <p style="color: #94A3B8; font-size: 13px; text-align: center; margin: 0;">
+            If the button doesn't work, copy and paste this link:<br/>
+            <a href="${verificationUrl}" style="color: #2563EB; word-break: break-all;">${verificationUrl}</a>
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 24px;">
+          <p style="color: #94A3B8; font-size: 12px; margin: 0;">
+            If you didn't create an account, you can safely ignore this email.<br/>
+            © 2026 HRPlatform. All rights reserved.
+          </p>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendApplicationStatusEmail, sendInterviewEmail, sendVerificationEmail };

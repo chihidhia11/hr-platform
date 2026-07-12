@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -22,6 +23,14 @@ const userSchema = new mongoose.Schema({
   skills: {
     type: [String],
     default: []
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: {
+    type: String,
+    default: () => crypto.randomBytes(32).toString('hex')
   }
 }, { timestamps: true });
 
