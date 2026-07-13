@@ -8,6 +8,7 @@ import MyApplications from './pages/MyApplications';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import VerifyEmail from './pages/VerifyEmail';
+import Chatbot from './components/Chatbot';
 
 function GuestRoute({ children }) {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -193,6 +194,9 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* AI Chatbot — shown on all pages */}
+      <Chatbot />
     </div>
   );
 }
